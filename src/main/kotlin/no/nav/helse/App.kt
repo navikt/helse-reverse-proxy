@@ -127,7 +127,19 @@ private fun ApplicationRequest.pathWithoutFirstPathSegment(): String {
 }
 
 private fun produceDestinationUrl(destinationPath: String, baseUrl: URL) : URL {
-    return URLBuilder(baseUrl.toString()).path(destinationPath).build().toURI().toURL()
+    return URLBuilder(baseUrl.toString())
+        .trimmedPath(listOf(baseUrl.path, destinationPath))
+        .build().toURI().toURL()
+}
+
+private fun URLBuilder.trimmedPath(pathParts : List<String>): URLBuilder  {
+    val trimmedPathParts = mutableListOf<String>()
+    pathParts.forEach { part ->
+        if (part.isNotBlank()) {
+            trimmedPathParts.add(part.trimStart('/').trimEnd('/'))
+        }
+    }
+    return path(trimmedPathParts)
 }
 
 private fun ApplicationRequest.isMonitoringRequest() : Boolean {
