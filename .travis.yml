@@ -1,0 +1,56 @@
+sudo: required
+language: java
+jdk:
+  - openjdk11
+services:
+  - docker
+before_install:
+  - openssl aes-256-cbc -K $encrypted_64326af5f73d_key -iv $encrypted_64326af5f73d_iv
+    -in travis/helseci.key.enc -out travis/helseci.key -d
+  - git clone https://github.com/navikt/github-apps-support.git
+  - export PATH=`pwd`/github-apps-support/bin:$PATH
+  - export GH_TOKEN=$(generate-installation-token.sh `generate-jwt.sh ./travis/helseci.key
+    $GITHUB_APP_ID`)
+  - export COMMIT_SHORT=$(git rev-parse --short HEAD)
+  - export ORIGINAL_COMMITTER=$(git log -1 --pretty=format:'%an <%ae>')
+  - echo -e "machine github.com\n  login $GH_TOKEN" > ~/.netrc
+script:
+  - "./gradlew check jar"
+  - docker build --pull -t $DOCKER_IMG_NAME:$COMMIT_SHORT .
+  - |
+    set -e
+    if [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "master" ]; then
+      echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin
+      docker push $DOCKER_IMG_NAME:$COMMIT_SHORT
+
+      git clone https://x-access-token:$GH_TOKEN@github.com/navikt/helse-iac.git
+
+      cd helse-iac
+      ./set-image.sh preprod/$APP_NAME/naiserator-sbs.yaml $DOCKER_IMG_NAME:$COMMIT_SHORT
+      ./set-image.sh prod/$APP_NAME/naiserator-sbs.yaml $DOCKER_IMG_NAME:$COMMIT_SHORT
+
+      git config user.name team-helse[bot]
+      git config user.email team-helse[bot]@users.noreply.github.com
+
+      git add preprod/$APP_NAME/naiserator-sbs.yaml
+      git add prod/$APP_NAME/naiserator-sbs.yaml
+      git commit -m "Bump $APP_NAME" -m "Caused by $TRAVIS_BUILD_WEB_URL" --author "$ORIGINAL_COMMITTER"
+
+      git push https://x-access-token:$GH_TOKEN@github.com/navikt/helse-iac.git master
+
+      cd ..
+      fi
+before_cache:
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+cache:
+  directories:
+    - "$HOME/.gradle/caches/"
+    - "$HOME/.gradle/wrapper/"
+env:
+  global:
+    - APP_NAME=helse-reverse-proxy
+    - DOCKER_IMG_NAME=navikt/helse-reverse-proxy
+    - GITHUB_APP_ID=19726
+    - secure: c/2V9nRrrs09bBuoCtZT6gO0EdA38EvsywcvoDJOdi6mkb+rnAPae61No/by5ELv6wH0CmGkjaYZHqyxmdC0tvVUxqJROiPTGcZtKxApZ1sqFD1pEKyedi4LKhH7OHAoZ0QW2o8ACuquq9m8v/YK6m0DekbgUrR5mi8mlYAUfBAZg4ckJP2ACtya0sK3sS485nYrLob4v4H6DOzMNjsbhInT7MLOo7U9a8RQvV5RE+cMi1KMSQSczy9IazvUn6F29Fq65HXBRK85MJCoacDg1MhUX/ITmycXudVtCFzBzkx73giMXmciukew7aT79dzj83tnPyZVLOYdQjZG8PHeO6JZcCldAEAHl4Zkgh5P1leCtHt/Efg56vCiVIfbh8HwcbLiImeSrfxO4QgHrvUwYQUwIJ1r0xVLut40h9zSzAywCU5/wnIFPgDtCV0OnFWcfGppk0ejQfGb8bNxMRZ9XgEI+C0bWe1Y8PSyQtOkazLRcUcUV04DFnJ2jR37J7Ut/jEd44+ELqMiILfhw+YAGBwZWEi01VrMQfEDzDIRzmK4nso08XQfQk1jeI0mHp2HqYiZAvJz1KyBZ0AGwEzAHaGwpcKgmyfe/40KSkOeI/3b/fJr5MQ7HJeU47XSkSoHnsrp0NQAbVsYaff2wJ6lFpnU12PUCKhh4eMtOiAxCvk=
+    - secure: IKr1R8r6caMc7zGKc+iDy2GVfdOa5ulxVm9LahrYKcFgsxZF38Tp/ObHY9vapZA44YAWVREwTVk3pGqmxNYAwrVsoczSSHhyyuGYcUZF0OY8zCW6EGpyqzsI5fIPe/7jWbPcm6WvoSsxqqPJd2HavphujY6BS2So+Rfs5L4QMger7bf9xTKwCjENMfctIz67jLRDE0uo0pWOj0eNfYm3W9aagTXYPOjtJxNrOvqc06FTZlTcfaD7LnSNGO8j/5e6aulHOSs64rY+ZZtHsSv7AyQcf49AEF+zCGFSyRdAE3V4fJ+aSY0FevThJepr3M3VBr1LQLi4Q8WWsSCVeVGI6pkDVUXqXqe3ahp2g+o99Hh8pB6Uokf8fbrTr04jGaK2o8MI7SzBM9ny9nNA5FgmUYIYrFROVw18PjwbmsfBIELo+HBtIEAERzHIH0lwrr7y+4QmLKz0o4rKuaSN4WhvJZio9gH/I95ekXi82tRe1xX6Ez/QAQpFgHGo3B1J+VEMi8EzX3/cfnMBb0BepsaZTPsyvhxWFstZ0An1VfDvUtuzNXPioGp/BYSrM6JhtfJzO6rnlF2RB28Zk+ArRMOMnnSxZMyM3fEJJL02/YcAGb2W7svYRhHtEUDnszAKrdF/qLe1pRqWg89HC5UH91TP7BEhVV+C+w9pBEFSdge7VnY=
