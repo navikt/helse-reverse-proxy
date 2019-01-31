@@ -1,9 +1,6 @@
 package no.nav.helse
 
-import io.ktor.application.Application
-import io.ktor.application.ApplicationCallPipeline
-import io.ktor.application.call
-import io.ktor.application.install
+import io.ktor.application.*
 import io.ktor.client.HttpClient
 import io.ktor.client.call.call
 import io.ktor.client.engine.apache.Apache
@@ -42,7 +39,7 @@ fun Application.helseReverseProxy() {
 
     intercept(ApplicationCallPipeline.Call) {
         if (!call.request.hasValidPath()) {
-            call.respond(HttpStatusCode.BadGateway, "Invalid requested path.")
+            call.respondErrorAndLog(HttpStatusCode.BadGateway, "Invalid requested path.")
         } else if (!call.request.isMonitoringRequest())  {
             val destinationApplication = call.request.firstPathSegment()
             logger.trace("destinationApplication = '$destinationApplication'")
@@ -52,7 +49,7 @@ fun Application.helseReverseProxy() {
             logger.trace("httpMethod = '$httpMethod'")
 
             if (!mappings.containsKey(destinationApplication)) {
-                call.respond(HttpStatusCode.BadGateway, "Application '$destinationApplication' not configured.")
+                call.respondErrorAndLog(HttpStatusCode.BadGateway, "Application '$destinationApplication' not configured.")
             } else  {
                 val queryParameters = call.request.queryParameters
                 val headers = call.request.headers
@@ -78,7 +75,6 @@ fun Application.helseReverseProxy() {
                     }
                 }
 
-
                 httpRequestBuilder.body = TextContent(call.receiveText(), contentType = ContentType.Application.Json)
 
                 try {
@@ -91,15 +87,26 @@ fun Application.helseReverseProxy() {
                         }
                     }
                     val responseEntity = TextContent(clientResponse.readText(), contentType = ContentType.Application.Json)
-                    call.respond(clientResponse.status, responseEntity)
+                    call.forwardClientResponse(clientResponse.status, responseEntity, destinationUrl)
                 } catch (cause : Throwable) {
-                    logger.error("Unable to proxy request.", cause)
-                    call.respond(HttpStatusCode.GatewayTimeout)
+                    call.respondErrorAndLog(HttpStatusCode.GatewayTimeout, "Unable to proxy request.", cause)
                 }
             }
         }
     }
 
+}
+
+private suspend fun ApplicationCall.forwardClientResponse(status: HttpStatusCode, message: TextContent, destinationUrl: URL) {
+    if (!status.isSuccess()) {
+        logger.warn("HTTP $status from $destinationUrl")
+    }
+    respond(status, message)
+}
+
+private suspend fun ApplicationCall.respondErrorAndLog(status: HttpStatusCode, error: String, cause: Throwable? = null) {
+    logger.error("HTTP $status -> $error", cause)
+    respond(status, error)
 }
 
 private fun ApplicationRequest.hasValidPath(): Boolean {
