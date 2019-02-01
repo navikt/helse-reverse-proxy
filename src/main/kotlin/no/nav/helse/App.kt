@@ -10,6 +10,9 @@ import io.ktor.client.request.parameter
 import io.ktor.client.request.url
 import io.ktor.client.response.readText
 import io.ktor.content.TextContent
+import io.ktor.features.CallId
+import io.ktor.features.CallLogging
+import io.ktor.features.callIdMdc
 import io.ktor.http.*
 import io.ktor.request.*
 import io.ktor.response.header
@@ -17,7 +20,9 @@ import io.ktor.response.respond
 import io.ktor.routing.Routing
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.slf4j.event.Level
 import java.net.URL
+import java.util.*
 
 private val logger: Logger = LoggerFactory.getLogger("nav.App")
 private val monitoringPaths = listOf("isalive", "isready")
@@ -37,16 +42,25 @@ fun Application.helseReverseProxy() {
         monitoring()
     }
 
+    install(CallId) {
+        header("Nav-Call-Id")
+        generate { UUID.randomUUID().toString() }
+    }
+
+    install(CallLogging) {
+        callIdMdc("call_id")
+    }
+
     intercept(ApplicationCallPipeline.Call) {
         if (!call.request.hasValidPath()) {
             call.respondErrorAndLog(HttpStatusCode.BadGateway, "Invalid requested path.")
         } else if (!call.request.isMonitoringRequest())  {
             val destinationApplication = call.request.firstPathSegment()
-            logger.trace("destinationApplication = '$destinationApplication'")
+            logger.info("destinationApplication = '$destinationApplication'")
             val destinationPath = call.request.pathWithoutFirstPathSegment()
-            logger.trace("destinationPath = '$destinationPath'")
+            logger.info("destinationPath = '$destinationPath'")
             val httpMethod = call.request.httpMethod
-            logger.trace("httpMethod = '$httpMethod'")
+            logger.info("httpMethod = '$httpMethod'")
 
             if (!mappings.containsKey(destinationApplication)) {
                 call.respondErrorAndLog(HttpStatusCode.BadGateway, "Application '$destinationApplication' not configured.")
@@ -55,7 +69,7 @@ fun Application.helseReverseProxy() {
                 val headers = call.request.headers
 
                 val destinationUrl = produceDestinationUrl(destinationPath, mappings[destinationApplication]!!)
-                logger.trace("destinationUrl = '$destinationUrl'")
+                logger.info("destinationUrl = '$destinationUrl'")
 
                 val httpRequestBuilder = HttpRequestBuilder()
 
