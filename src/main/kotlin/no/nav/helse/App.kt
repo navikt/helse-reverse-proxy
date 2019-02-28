@@ -20,8 +20,8 @@ import io.ktor.response.respond
 import io.ktor.routing.Routing
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.slf4j.event.Level
 import java.net.URL
-import java.util.*
 
 private val logger: Logger = LoggerFactory.getLogger("nav.App")
 private val monitoringPaths = listOf("isalive", "isready")
@@ -42,16 +42,19 @@ fun Application.helseReverseProxy() {
     }
 
     install(CallId) {
-        header("Nav-Call-Id")
-        generate { UUID.randomUUID().toString() }
+        header(HttpHeaders.XCorrelationId)
     }
 
     install(CallLogging) {
-        callIdMdc("call_id")
+        level = Level.TRACE
+        filter { call -> !monitoringPaths.contains(call.request.path().removePrefix("/")) }
+        callIdMdc("correlation_id")
     }
 
     intercept(ApplicationCallPipeline.Call) {
-        if (!call.request.hasValidPath()) {
+        if (!call.request.hasCorrelationIdSet()) {
+            call.respondErrorAndLog(HttpStatusCode.BadGateway, "Missing header ${HttpHeaders.XCorrelationId}")
+        } else if (!call.request.hasValidPath()) {
             call.respondErrorAndLog(HttpStatusCode.BadGateway, "Invalid requested path.")
         } else if (!call.request.isMonitoringRequest())  {
             val destinationApplication = call.request.firstPathSegment()
@@ -125,6 +128,10 @@ private suspend fun ApplicationCall.respondErrorAndLog(status: HttpStatusCode, e
 private fun ApplicationRequest.hasValidPath(): Boolean {
     val path = getPathWithoutLeadingSlashes()
     return path.isNotBlank()
+}
+
+private fun ApplicationRequest.hasCorrelationIdSet(): Boolean {
+    return header(HttpHeaders.XCorrelationId) != null
 }
 
 private fun ApplicationRequest.getPathWithoutLeadingSlashes(): String {
