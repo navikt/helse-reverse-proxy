@@ -20,7 +20,6 @@ import io.ktor.response.respond
 import io.ktor.routing.Routing
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.slf4j.event.Level
 import java.net.URL
 import java.util.*
 
@@ -56,11 +55,11 @@ fun Application.helseReverseProxy() {
             call.respondErrorAndLog(HttpStatusCode.BadGateway, "Invalid requested path.")
         } else if (!call.request.isMonitoringRequest())  {
             val destinationApplication = call.request.firstPathSegment()
-            logger.info("destinationApplication = '$destinationApplication'")
+            logger.trace("destinationApplication = '$destinationApplication'")
             val destinationPath = call.request.pathWithoutFirstPathSegment()
-            logger.info("destinationPath = '$destinationPath'")
+            logger.trace("destinationPath = '$destinationPath'")
             val httpMethod = call.request.httpMethod
-            logger.info("httpMethod = '$httpMethod'")
+            logger.trace("httpMethod = '$httpMethod'")
 
             if (!mappings.containsKey(destinationApplication)) {
                 call.respondErrorAndLog(HttpStatusCode.BadGateway, "Application '$destinationApplication' not configured.")
@@ -69,7 +68,7 @@ fun Application.helseReverseProxy() {
                 val headers = call.request.headers
 
                 val destinationUrl = produceDestinationUrl(destinationPath, mappings[destinationApplication]!!)
-                logger.info("destinationUrl = '$destinationUrl'")
+                logger.trace("destinationUrl = '$destinationUrl'")
 
                 val httpRequestBuilder = HttpRequestBuilder()
 
