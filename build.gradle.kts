@@ -1,23 +1,19 @@
 import org.gradle.internal.impldep.org.fusesource.jansi.AnsiRenderer.test
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-val logbackVersion = "1.2.1"
-val ktorVersion = "1.0.1"
-val jacksonVersion = "2.9.2"
-val wiremockVersion = "2.19.0"
-val logstashLogbackVersion = "5.2"
-val kafkaVersion = "2.0.1"
-val prometheusVersion = "0.6.0"
+val logbackVersion = "1.2.3"
+val ktorVersion = "1.1.2"
+val logstashLogbackVersion = "5.3"
 
 val mainClass = "no.nav.helse.AppKt"
 
 plugins {
-    kotlin("jvm") version "1.3.11"
+    kotlin("jvm") version "1.3.21"
 }
 
 buildscript {
     dependencies {
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.0")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.21")
     }
 }
 
@@ -30,10 +26,6 @@ dependencies {
     // Logging
     compile ( "ch.qos.logback:logback-classic:$logbackVersion")
     compile ("net.logstash.logback:logstash-logback-encoder:$logstashLogbackVersion")
-
-    // Prometheus
-    compile("io.prometheus:simpleclient_common:$prometheusVersion")
-    compile("io.prometheus:simpleclient_hotspot:$prometheusVersion")
 
     // Ktor Client
     compile ("io.ktor:ktor-client-core:$ktorVersion")
@@ -85,5 +77,5 @@ tasks.named<Jar>("jar") {
 }
 
 tasks.withType<Wrapper> {
-    gradleVersion = "5.0"
+    gradleVersion = "5.2.1"
 }
