@@ -8,7 +8,7 @@ import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.request.url
-import io.ktor.client.response.readText
+import io.ktor.client.response.readBytes
 import io.ktor.content.TextContent
 import io.ktor.features.CallId
 import io.ktor.features.CallLogging
@@ -21,10 +21,12 @@ import io.ktor.routing.Routing
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
+import java.io.InputStream
 import java.net.URL
 
 private val logger: Logger = LoggerFactory.getLogger("nav.App")
 private val monitoringPaths = listOf("isalive", "isready")
+private val JSON_UTF_8 = ContentType.Application.Json.withCharset(Charsets.UTF_8)
 
 fun main(args: Array<String>): Unit  = io.ktor.server.netty.EngineMain.main(args)
 
@@ -91,7 +93,8 @@ fun Application.helseReverseProxy() {
                     }
                 }
 
-                httpRequestBuilder.body = TextContent(call.receiveText(), contentType = ContentType.Application.Json)
+
+                httpRequestBuilder.body = ensureUtf8(inputStream = call.receiveStream())
 
                 try {
                     val clientResponse = client.call(httpRequestBuilder).response
@@ -102,7 +105,7 @@ fun Application.helseReverseProxy() {
                             }
                         }
                     }
-                    val responseEntity = TextContent(clientResponse.readText(), contentType = ContentType.Application.Json)
+                    val responseEntity = ensureUtf8(byteArray = clientResponse.readBytes())
                     call.forwardClientResponse(clientResponse.status, responseEntity, destinationUrl)
                 } catch (cause : Throwable) {
                     call.respondErrorAndLog(HttpStatusCode.GatewayTimeout, "Unable to proxy request.", cause)
@@ -171,4 +174,21 @@ private fun URLBuilder.trimmedPath(pathParts : List<String>): URLBuilder  {
 
 private fun ApplicationRequest.isMonitoringRequest() : Boolean {
     return monitoringPaths.contains(firstPathSegment())
+}
+
+private fun ensureUtf8(
+    inputStream : InputStream? = null,
+    byteArray: ByteArray? = null
+) : TextContent {
+    if (inputStream != null && byteArray != null) throw IllegalStateException("Sett enten inputStream eller byteArray.")
+    if (inputStream == null && byteArray == null) throw IllegalStateException("Enten inputStream eller byteArray må settes.")
+    val usedByteArray = byteArray ?: inputStream!!.readAllBytes()
+
+    val utf8String = String(usedByteArray, Charsets.UTF_8)
+    if (inputStream != null) {
+        try {
+            inputStream.close()
+        } catch (ignore: Throwable) {}
+    }
+    return TextContent(utf8String, contentType = JSON_UTF_8)
 }
