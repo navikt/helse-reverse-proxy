@@ -48,7 +48,7 @@ fun Application.helseReverseProxy() {
     }
 
     install(CallLogging) {
-        level = Level.TRACE
+        level = Level.INFO
         filter { call -> !monitoringPaths.contains(call.request.path().removePrefix("/")) }
         callIdMdc("correlation_id")
     }
