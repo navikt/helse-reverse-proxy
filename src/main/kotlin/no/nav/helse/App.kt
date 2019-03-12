@@ -28,7 +28,7 @@ private val logger: Logger = LoggerFactory.getLogger("nav.App")
 private val monitoringPaths = listOf("isalive", "isready")
 private val JSON_UTF_8 = ContentType.Application.Json.withCharset(Charsets.UTF_8)
 
-fun main(args: Array<String>): Unit  = io.ktor.se   rver.netty.EngineMain.main(args)
+fun main(args: Array<String>): Unit  = io.ktor.server.netty.EngineMain.main(args)
 
 fun Application.helseReverseProxy() {
     val mappings = Environment().getMappings()
