@@ -28,7 +28,7 @@ private val logger: Logger = LoggerFactory.getLogger("nav.App")
 private val monitoringPaths = listOf("isalive", "isready")
 private val JSON_UTF_8 = ContentType.Application.Json.withCharset(Charsets.UTF_8)
 
-fun main(args: Array<String>): Unit  = io.ktor.server.netty.EngineMain.main(args)
+fun main(args: Array<String>): Unit  = io.ktor.se   rver.netty.EngineMain.main(args)
 
 fun Application.helseReverseProxy() {
     val mappings = Environment().getMappings()
@@ -54,61 +54,63 @@ fun Application.helseReverseProxy() {
     }
 
     intercept(ApplicationCallPipeline.Call) {
-        if (!call.request.hasCorrelationIdSet()) {
-            call.respondErrorAndLog(HttpStatusCode.BadGateway, "Missing header ${HttpHeaders.XCorrelationId}")
-        } else if (!call.request.hasValidPath()) {
-            call.respondErrorAndLog(HttpStatusCode.BadGateway, "Invalid requested path.")
-        } else if (!call.request.isMonitoringRequest())  {
-            val destinationApplication = call.request.firstPathSegment()
-            logger.trace("destinationApplication = '$destinationApplication'")
-            val destinationPath = call.request.pathWithoutFirstPathSegment()
-            logger.trace("destinationPath = '$destinationPath'")
-            val httpMethod = call.request.httpMethod
-            logger.trace("httpMethod = '$httpMethod'")
+        if (!call.request.isMonitoringRequest()) {
+            if (!call.request.hasCorrelationIdSet()) {
+                call.respondErrorAndLog(HttpStatusCode.BadGateway, "Missing header ${HttpHeaders.XCorrelationId}")
+            } else if (!call.request.hasValidPath()) {
+                call.respondErrorAndLog(HttpStatusCode.BadGateway, "Invalid requested path.")
+            } else if (!call.request.isMonitoringRequest())  {
+                val destinationApplication = call.request.firstPathSegment()
+                logger.trace("destinationApplication = '$destinationApplication'")
+                val destinationPath = call.request.pathWithoutFirstPathSegment()
+                logger.trace("destinationPath = '$destinationPath'")
+                val httpMethod = call.request.httpMethod
+                logger.trace("httpMethod = '$httpMethod'")
 
-            if (!mappings.containsKey(destinationApplication)) {
-                call.respondErrorAndLog(HttpStatusCode.BadGateway, "Application '$destinationApplication' not configured.")
-            } else  {
-                val queryParameters = call.request.queryParameters
-                val headers = call.request.headers
+                if (!mappings.containsKey(destinationApplication)) {
+                    call.respondErrorAndLog(HttpStatusCode.BadGateway, "Application '$destinationApplication' not configured.")
+                } else  {
+                    val queryParameters = call.request.queryParameters
+                    val headers = call.request.headers
 
-                val destinationUrl = produceDestinationUrl(destinationPath, mappings[destinationApplication]!!)
-                logger.trace("destinationUrl = '$destinationUrl'")
+                    val destinationUrl = produceDestinationUrl(destinationPath, mappings[destinationApplication]!!)
+                    logger.trace("destinationUrl = '$destinationUrl'")
 
-                val httpRequestBuilder = HttpRequestBuilder()
+                    val httpRequestBuilder = HttpRequestBuilder()
 
-                httpRequestBuilder.url(destinationUrl)
-                httpRequestBuilder.method = httpMethod
+                    httpRequestBuilder.url(destinationUrl)
+                    httpRequestBuilder.method = httpMethod
 
-                queryParameters.forEach { key, values ->
-                    values.forEach { value ->
-                        httpRequestBuilder.parameter(key, value)
-                    }
-                }
-                headers.forEach { key, values ->
-                    values.forEach { value ->
-                        if (!excludeHeaders.contains(key.toLowerCase())) {
-                            httpRequestBuilder.header(key, value)
+                    queryParameters.forEach { key, values ->
+                        values.forEach { value ->
+                            httpRequestBuilder.parameter(key, value)
                         }
                     }
-                }
-
-
-                httpRequestBuilder.body = ensureUtf8(inputStream = call.receiveStream())
-
-                try {
-                    val clientResponse = client.call(httpRequestBuilder).response
-                    clientResponse.headers.forEach { key, values ->
-                        values.forEach {value ->
+                    headers.forEach { key, values ->
+                        values.forEach { value ->
                             if (!excludeHeaders.contains(key.toLowerCase())) {
-                                call.response.header(key, value)
+                                httpRequestBuilder.header(key, value)
                             }
                         }
                     }
-                    val responseEntity = ensureUtf8(byteArray = clientResponse.readBytes())
-                    call.forwardClientResponse(clientResponse.status, responseEntity, destinationUrl)
-                } catch (cause : Throwable) {
-                    call.respondErrorAndLog(HttpStatusCode.GatewayTimeout, "Unable to proxy request.", cause)
+
+
+                    httpRequestBuilder.body = ensureUtf8(inputStream = call.receiveStream())
+
+                    try {
+                        val clientResponse = client.call(httpRequestBuilder).response
+                        clientResponse.headers.forEach { key, values ->
+                            values.forEach {value ->
+                                if (!excludeHeaders.contains(key.toLowerCase())) {
+                                    call.response.header(key, value)
+                                }
+                            }
+                        }
+                        val responseEntity = ensureUtf8(byteArray = clientResponse.readBytes())
+                        call.forwardClientResponse(clientResponse.status, responseEntity, destinationUrl)
+                    } catch (cause : Throwable) {
+                        call.respondErrorAndLog(HttpStatusCode.GatewayTimeout, "Unable to proxy request.", cause)
+                    }
                 }
             }
         }
