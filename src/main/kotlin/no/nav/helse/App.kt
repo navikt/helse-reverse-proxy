@@ -21,7 +21,6 @@ import io.ktor.routing.Routing
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
-import java.io.InputStream
 import java.net.URL
 
 private val logger: Logger = LoggerFactory.getLogger("nav.App")
@@ -95,7 +94,7 @@ fun Application.helseReverseProxy() {
                     }
 
 
-                    httpRequestBuilder.body = ensureUtf8(inputStream = call.receiveStream())
+                    httpRequestBuilder.body = ensureUtf8(byteArray = call.receive())
 
                     try {
                         val clientResponse = client.call(httpRequestBuilder).response
@@ -179,18 +178,8 @@ private fun ApplicationRequest.isMonitoringRequest() : Boolean {
 }
 
 private fun ensureUtf8(
-    inputStream : InputStream? = null,
-    byteArray: ByteArray? = null
+    byteArray: ByteArray
 ) : TextContent {
-    if (inputStream != null && byteArray != null) throw IllegalStateException("Sett enten inputStream eller byteArray.")
-    if (inputStream == null && byteArray == null) throw IllegalStateException("Enten inputStream eller byteArray må settes.")
-    val usedByteArray = byteArray ?: inputStream!!.readAllBytes()
-
-    val utf8String = String(usedByteArray, Charsets.UTF_8)
-    if (inputStream != null) {
-        try {
-            inputStream.close()
-        } catch (ignore: Throwable) {}
-    }
+    val utf8String = String(byteArray, Charsets.UTF_8)
     return TextContent(utf8String, contentType = JSON_UTF_8)
 }
