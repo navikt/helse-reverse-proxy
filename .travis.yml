@@ -1,56 +1,56 @@
 sudo: required
 language: java
 jdk:
-  - openjdk11
+- openjdk11
 services:
-  - docker
+- docker
 before_install:
-  - openssl aes-256-cbc -K $encrypted_64326af5f73d_key -iv $encrypted_64326af5f73d_iv
-    -in travis/helseci.key.enc -out travis/helseci.key -d
-  - git clone https://github.com/navikt/github-apps-support.git
-  - export PATH=`pwd`/github-apps-support/bin:$PATH
-  - export GH_TOKEN=$(generate-installation-token.sh `generate-jwt.sh ./travis/helseci.key
-    $GITHUB_APP_ID`)
-  - export COMMIT_SHORT=$(git rev-parse --short HEAD)
-  - export ORIGINAL_COMMITTER=$(git log -1 --pretty=format:'%an <%ae>')
-  - echo -e "machine github.com\n  login $GH_TOKEN" > ~/.netrc
+- openssl aes-256-cbc -K $encrypted_64326af5f73d_key -iv $encrypted_64326af5f73d_iv
+  -in travis/helseci.key.enc -out travis/helseci.key -d
+- git clone https://github.com/navikt/github-apps-support.git
+- export PATH=`pwd`/github-apps-support/bin:$PATH
+- export GH_TOKEN=$(generate-installation-token.sh `generate-jwt.sh ./travis/helseci.key
+  $GITHUB_APP_ID`)
+- export COMMIT_SHORT=$(git rev-parse --short HEAD)
+- export ORIGINAL_COMMITTER=$(git log -1 --pretty=format:'%an <%ae>')
+- echo -e "machine github.com\n  login $GH_TOKEN" > ~/.netrc
 script:
-  - "./gradlew check jar"
-  - docker build --pull -t $DOCKER_IMG_NAME:$COMMIT_SHORT .
-  - |
-    set -e
-    if [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "master" ]; then
-      echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin
-      docker push $DOCKER_IMG_NAME:$COMMIT_SHORT
+- "./gradlew check jar"
+- docker build --pull -t $DOCKER_IMG_NAME:$COMMIT_SHORT .
+- |
+  set -e
+  if [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "master" ]; then
+    echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin
+    docker push $DOCKER_IMG_NAME:$COMMIT_SHORT
 
-      git clone https://x-access-token:$GH_TOKEN@github.com/navikt/helse-iac.git
+    git clone https://x-access-token:$GH_TOKEN@github.com/navikt/helse-iac.git
 
-      cd helse-iac
-      ./set-image.sh preprod/$APP_NAME/naiserator.yaml $DOCKER_IMG_NAME:$COMMIT_SHORT
-      ./set-image.sh prod/$APP_NAME/naiserator.yaml $DOCKER_IMG_NAME:$COMMIT_SHORT
+    cd helse-iac
+    ./set-image.sh preprod/$APP_NAME/naiserator.yaml $DOCKER_IMG_NAME:$COMMIT_SHORT
+    ./set-image.sh prod/$APP_NAME/naiserator.yaml $DOCKER_IMG_NAME:$COMMIT_SHORT
 
-      git config user.name team-helse[bot]
-      git config user.email team-helse[bot]@users.noreply.github.com
+    git config user.name team-helse[bot]
+    git config user.email team-helse[bot]@users.noreply.github.com
 
-      git add preprod/$APP_NAME/naiserator.yaml
-      git add prod/$APP_NAME/naiserator.yaml
-      git commit -m "Bump $APP_NAME" -m "Caused by $TRAVIS_BUILD_WEB_URL" --author "$ORIGINAL_COMMITTER"
+    git add preprod/$APP_NAME/naiserator.yaml
+    git add prod/$APP_NAME/naiserator.yaml
+    git commit -m "Bump $APP_NAME" -m "Caused by $TRAVIS_BUILD_WEB_URL" --author "$ORIGINAL_COMMITTER"
 
-      git push https://x-access-token:$GH_TOKEN@github.com/navikt/helse-iac.git master
+    git push https://x-access-token:$GH_TOKEN@github.com/navikt/helse-iac.git master
 
-      cd ..
-      fi
+    cd ..
+    fi
 before_cache:
-  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
-  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+- rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+- rm -fr $HOME/.gradle/caches/*/plugin-resolution/
 cache:
   directories:
-    - "$HOME/.gradle/caches/"
-    - "$HOME/.gradle/wrapper/"
+  - "$HOME/.gradle/caches/"
+  - "$HOME/.gradle/wrapper/"
 env:
   global:
-    - APP_NAME=helse-reverse-proxy
-    - DOCKER_IMG_NAME=navikt/helse-reverse-proxy
-    - GITHUB_APP_ID=19726
-    - secure: c/2V9nRrrs09bBuoCtZT6gO0EdA38EvsywcvoDJOdi6mkb+rnAPae61No/by5ELv6wH0CmGkjaYZHqyxmdC0tvVUxqJROiPTGcZtKxApZ1sqFD1pEKyedi4LKhH7OHAoZ0QW2o8ACuquq9m8v/YK6m0DekbgUrR5mi8mlYAUfBAZg4ckJP2ACtya0sK3sS485nYrLob4v4H6DOzMNjsbhInT7MLOo7U9a8RQvV5RE+cMi1KMSQSczy9IazvUn6F29Fq65HXBRK85MJCoacDg1MhUX/ITmycXudVtCFzBzkx73giMXmciukew7aT79dzj83tnPyZVLOYdQjZG8PHeO6JZcCldAEAHl4Zkgh5P1leCtHt/Efg56vCiVIfbh8HwcbLiImeSrfxO4QgHrvUwYQUwIJ1r0xVLut40h9zSzAywCU5/wnIFPgDtCV0OnFWcfGppk0ejQfGb8bNxMRZ9XgEI+C0bWe1Y8PSyQtOkazLRcUcUV04DFnJ2jR37J7Ut/jEd44+ELqMiILfhw+YAGBwZWEi01VrMQfEDzDIRzmK4nso08XQfQk1jeI0mHp2HqYiZAvJz1KyBZ0AGwEzAHaGwpcKgmyfe/40KSkOeI/3b/fJr5MQ7HJeU47XSkSoHnsrp0NQAbVsYaff2wJ6lFpnU12PUCKhh4eMtOiAxCvk=
-    - secure: IKr1R8r6caMc7zGKc+iDy2GVfdOa5ulxVm9LahrYKcFgsxZF38Tp/ObHY9vapZA44YAWVREwTVk3pGqmxNYAwrVsoczSSHhyyuGYcUZF0OY8zCW6EGpyqzsI5fIPe/7jWbPcm6WvoSsxqqPJd2HavphujY6BS2So+Rfs5L4QMger7bf9xTKwCjENMfctIz67jLRDE0uo0pWOj0eNfYm3W9aagTXYPOjtJxNrOvqc06FTZlTcfaD7LnSNGO8j/5e6aulHOSs64rY+ZZtHsSv7AyQcf49AEF+zCGFSyRdAE3V4fJ+aSY0FevThJepr3M3VBr1LQLi4Q8WWsSCVeVGI6pkDVUXqXqe3ahp2g+o99Hh8pB6Uokf8fbrTr04jGaK2o8MI7SzBM9ny9nNA5FgmUYIYrFROVw18PjwbmsfBIELo+HBtIEAERzHIH0lwrr7y+4QmLKz0o4rKuaSN4WhvJZio9gH/I95ekXi82tRe1xX6Ez/QAQpFgHGo3B1J+VEMi8EzX3/cfnMBb0BepsaZTPsyvhxWFstZ0An1VfDvUtuzNXPioGp/BYSrM6JhtfJzO6rnlF2RB28Zk+ArRMOMnnSxZMyM3fEJJL02/YcAGb2W7svYRhHtEUDnszAKrdF/qLe1pRqWg89HC5UH91TP7BEhVV+C+w9pBEFSdge7VnY=
+  - APP_NAME=helse-reverse-proxy
+  - DOCKER_IMG_NAME=navikt/helse-reverse-proxy
+  - GITHUB_APP_ID=19726
+  - secure: MGDKXw+xhxTiy9J8iR2Imu7Q6bZi/T6sabgQm0CJegbZeLBHrgv59+FrnIjW8V84Wm6ElIt6UGqlLlX98fgnlY/GGz8lp/H3wYcd/U/Y5y+owPxsy22VrzbUqjS7g282as6vA3gxjlFPvEX0ZzFKUnYx6jzKALWkbdcddzp1/LBj344c8/SvQO5+VnZJyLIwIdEOdkecM0j4PsSsl1ThnBF2i3yVuZVmtkNFMMgpnCJ/BL+pJxsiTuNl+seJqRjCqdKy1RnOlL9vD5AQVvShGq0dJU3Z31uT8DgZ9d5CltgOxXwkCgZ7+1W5vcs8ghqKlcxcfhbt1kibK9quEIn4b5XjAR4z5c2MNm2CaSQKfdAptxkWk1XFdlcUw19jMlRXL50deFhLxqYWN0jcLe2Fvn+6Tg4lhSg2xyNLy9jQN0ANQJBLyrWTI6nYWd0P3Mledm8DyLoCymlYirC0Cw0H571OZl4ji0msdUhC+lzk9zQQbBOhk5jqLG01sl/UZVX/ps0FsPJb3CFKOVZm9rzuVvHqkzb7/R2KQVUT4aO7KgtZ48BLv4FZhUKRNE0RYrBUaHXINnPw5BUT6LBu+P6oj7uR2XpOsNB189JZ8rbndnVyF8M6NltBh95s9ojXnb7fHe8G5NmyYwwcarRU6KspqKpXSeiAAV7hQ/wt97SHyVw=
+  - secure: gPliOiGUUpEumVSFK17Gq9n0M8E9nnULjg9DvUFmusVWp1deZ+1fh6Iqu7EqtIKeaMcQ0U9pHXzy4aYrwr8RI0Jq05EFLQbYWjiAdCIoQfETHD2yaxEPLbW03Fu5dcTjVx8oZXHMo2KFBGfDIFx+yMQiyl1+TjaXQg9k4Zl8CZiTxEcxtobfgUL2u0LbPkNWoOSncc35OpMHlCF5QJ21f954An+dUz2EkJmLVkgqDnPr/S5hjTuP1NWA67CQj9rxWwubKjDSGbJmQuJkwgXv4nHFhUqfz53ctla/vHpL4stmYEpFm1sWDyBU7qLnXLyLNwL5WoM5GX/gn43B/fTmPOaGztUy6J8PHGOTWnfTtJejzbmk23TDg2d+YLIupFnFJ4SSc7j66AZEBtzZA6SCPQBVubHzAtgT4KwrsgkzcxpWmx6wHyIvgzTPkZBMW3l2aNtaknasgeRXNufPMikMlltoD5dqteUkIEFyXYpxlCL6kLn8ghbuJeeqHRSCEcB+4vPxpcsMVTIE71QfptFo3fArcr6ya3yYKsqJ5sn4Khfexrjw1pv2VdpRxsEHM1FUxO3Xhzkjf4OOiUDnhX71Wy4+AWvOsZfpEYL2AprjdN56zSHJaOasj1A+oM24KOSmIX4V6+mkWCZeetK89v1S+tIFFAW9mgVbOfWxyWz7dSY=
