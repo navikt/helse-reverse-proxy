@@ -106,7 +106,9 @@ fun Application.helseReverseProxy() {
                             }
                         }
                         val responseEntity = ensureUtf8(byteArray = clientResponse.readBytes())
-                        call.forwardClientResponse(clientResponse.status, responseEntity, destinationUrl)
+                        val status = clientResponse.status
+                        try { clientResponse.close() } catch (cause: Throwable) {log.warn("Kunne ikke lukke client response", cause)}
+                        call.forwardClientResponse(status, responseEntity, destinationUrl)
                     } catch (cause : Throwable) {
                         call.respondErrorAndLog(HttpStatusCode.GatewayTimeout, "Unable to proxy request.", cause)
                     }
