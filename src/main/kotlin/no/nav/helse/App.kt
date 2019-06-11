@@ -22,7 +22,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
 import java.net.URI
-import java.net.URL
 import java.util.*
 
 private val logger: Logger = LoggerFactory.getLogger("nav.App")
@@ -79,7 +78,7 @@ fun Application.helseReverseProxy() {
 
                     val httpRequest = initializeRequest(
                         httpMethod = httpMethod,
-                        url = destinationUrl.toURI(),
+                        url = destinationUrl,
                         parameters = parameters
                     )
                         .header(headers)
@@ -188,10 +187,10 @@ private fun ApplicationRequest.pathWithoutFirstPathSegment(): String {
     return path.substring(firstPathSegment.length)
 }
 
-private fun produceDestinationUrl(destinationPath: String, baseUrl: URL) : URL {
+private fun produceDestinationUrl(destinationPath: String, baseUrl: URI) : URI {
     return URLBuilder(baseUrl.toString())
         .trimmedPath(listOf(baseUrl.path, destinationPath))
-        .build().toURI().toURL()
+        .build().toURI()
 }
 
 private fun URLBuilder.trimmedPath(pathParts : List<String>): URLBuilder  {
