@@ -1,15 +1,13 @@
 package no.nav.helse
 
+import com.github.kittinunf.fuel.core.Request
+import com.github.kittinunf.fuel.core.Response
+import com.github.kittinunf.fuel.coroutines.awaitByteArrayResponseResult
+import com.github.kittinunf.fuel.httpDelete
+import com.github.kittinunf.fuel.httpGet
+import com.github.kittinunf.fuel.httpPost
+import com.github.kittinunf.fuel.httpPut
 import io.ktor.application.*
-import io.ktor.client.HttpClient
-import io.ktor.client.call.call
-import io.ktor.client.engine.apache.Apache
-import io.ktor.client.request.HttpRequestBuilder
-import io.ktor.client.request.header
-import io.ktor.client.request.parameter
-import io.ktor.client.request.url
-import io.ktor.client.response.readBytes
-import io.ktor.content.TextContent
 import io.ktor.features.CallId
 import io.ktor.features.CallLogging
 import io.ktor.features.callIdMdc
@@ -17,42 +15,47 @@ import io.ktor.http.*
 import io.ktor.request.*
 import io.ktor.response.header
 import io.ktor.response.respond
+import io.ktor.response.respondBytes
 import io.ktor.routing.Routing
+import no.nav.helse.dusseldorf.ktor.core.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.slf4j.event.Level
+import java.io.ByteArrayInputStream
+import java.net.URI
 import java.net.URL
+import java.util.*
 
 private val logger: Logger = LoggerFactory.getLogger("nav.App")
+private const val navCallIdHeader = "Nav-Call-Id"
 private val monitoringPaths = listOf("isalive", "isready")
-private val JSON_UTF_8 = ContentType.Application.Json.withCharset(Charsets.UTF_8)
 
 fun main(args: Array<String>): Unit  = io.ktor.server.netty.EngineMain.main(args)
 
 fun Application.helseReverseProxy() {
     val mappings = Environment().getMappings()
-    val client = HttpClient(Apache)
-    val excludeHeaders = HttpHeaders.UnsafeHeaders.map { header -> header.toLowerCase() }
 
     install(Routing) {
-        monitoring()
+        DefaultProbeRoutes()
+    }
+
+    intercept(ApplicationCallPipeline.Monitoring) {
+        call.request.log()
     }
 
     install(CallId) {
-        header(HttpHeaders.XCorrelationId)
+        retrieve { call ->
+            call.request.header(HttpHeaders.XCorrelationId) ?: call.request.header(navCallIdHeader) ?: "generated-${UUID.randomUUID()}"
+        }
     }
 
     install(CallLogging) {
-        level = Level.INFO
-        filter { call -> !monitoringPaths.contains(call.request.path().removePrefix("/")) }
         callIdMdc("correlation_id")
+        logRequests()
     }
 
     intercept(ApplicationCallPipeline.Call) {
         if (!call.request.isMonitoringRequest()) {
-            if (!call.request.hasCorrelationIdSet()) {
-                call.respondErrorAndLog(HttpStatusCode.BadGateway, "Missing header ${HttpHeaders.XCorrelationId}")
-            } else if (!call.request.hasValidPath()) {
+            if (!call.request.hasValidPath()) {
                 call.respondErrorAndLog(HttpStatusCode.BadGateway, "Invalid requested path.")
             } else if (!call.request.isMonitoringRequest())  {
                 val destinationApplication = call.request.firstPathSegment()
@@ -61,53 +64,44 @@ fun Application.helseReverseProxy() {
                 logger.trace("destinationPath = '$destinationPath'")
                 val httpMethod = call.request.httpMethod
                 logger.trace("httpMethod = '$httpMethod'")
-
                 if (!mappings.containsKey(destinationApplication)) {
                     call.respondErrorAndLog(HttpStatusCode.BadGateway, "Application '$destinationApplication' not configured.")
                 } else  {
-                    val queryParameters = call.request.queryParameters
-                    val headers = call.request.headers
+                    val parameters = call.request.queryParameters.toFuel()
+                    val headers = call.request.headers.toFuel()
+                    val body = call.receiveOrNull<ByteArray>()
 
-                    val destinationUrl = produceDestinationUrl(destinationPath, mappings[destinationApplication]!!)
+                    val destinationUrl = produceDestinationUrl(destinationPath,
+                        mappings.getValue(destinationApplication)
+                    )
+
                     logger.trace("destinationUrl = '$destinationUrl'")
 
-                    val httpRequestBuilder = HttpRequestBuilder()
+                    val httpRequest = initializeRequest(
+                        httpMethod = httpMethod,
+                        url = destinationUrl.toURI(),
+                        parameters = parameters
+                    )
+                        .header(headers)
+                        .timeout(20_000)
+                        .timeoutRead(20_000)
 
-                    httpRequestBuilder.url(destinationUrl)
-                    httpRequestBuilder.method = httpMethod
-
-                    queryParameters.forEach { key, values ->
-                        values.forEach { value ->
-                            httpRequestBuilder.parameter(key, value)
-                        }
+                    if (body != null) {
+                        httpRequest.body(ByteArrayInputStream(body))
                     }
-                    headers.forEach { key, values ->
-                        values.forEach { value ->
-                            if (!excludeHeaders.contains(key.toLowerCase())) {
-                                httpRequestBuilder.header(key, value)
+
+                    val (_, response, result) = httpRequest.awaitByteArrayResponseResult()
+                    result.fold(
+                        { success -> call.forward(response, success)},
+                        { failure ->
+                            if (-1 == response.statusCode) {
+                                logger.error(failure.toString())
+                                call.respondErrorAndLog(HttpStatusCode.GatewayTimeout, "Unable to proxy request.")
+                            } else {
+                                call.forward(response, failure.errorData)
                             }
                         }
-                    }
-
-
-                    httpRequestBuilder.body = ensureUtf8(byteArray = call.receive())
-
-                    try {
-                        val clientResponse = client.call(httpRequestBuilder).response
-                        clientResponse.headers.forEach { key, values ->
-                            values.forEach {value ->
-                                if (!excludeHeaders.contains(key.toLowerCase())) {
-                                    call.response.header(key, value)
-                                }
-                            }
-                        }
-                        val responseEntity = ensureUtf8(byteArray = clientResponse.readBytes())
-                        val status = clientResponse.status
-                        try { clientResponse.close() } catch (cause: Throwable) {log.warn("Kunne ikke lukke client response", cause)}
-                        call.forwardClientResponse(status, responseEntity, destinationUrl)
-                    } catch (cause : Throwable) {
-                        call.respondErrorAndLog(HttpStatusCode.GatewayTimeout, "Unable to proxy request.", cause)
-                    }
+                    )
                 }
             }
         }
@@ -115,25 +109,64 @@ fun Application.helseReverseProxy() {
 
 }
 
-private suspend fun ApplicationCall.forwardClientResponse(status: HttpStatusCode, message: TextContent, destinationUrl: URL) {
-    if (!status.isSuccess()) {
-        logger.warn("HTTP $status from $destinationUrl")
+private suspend fun ApplicationCall.forward(
+    clientResponse: Response,
+    body: ByteArray
+) {
+    clientResponse.headers.forEach { key, value ->
+        if (!HttpHeaders.isUnsafe(key)) {
+            value.forEach { response.header(key, it) }
+        }
     }
-    respond(status, message)
+    respondBytes(
+        bytes = body,
+        status = HttpStatusCode.fromValue(clientResponse.statusCode),
+        contentType = clientResponse.contentType()
+    )
 }
 
-private suspend fun ApplicationCall.respondErrorAndLog(status: HttpStatusCode, error: String, cause: Throwable? = null) {
-    logger.error("HTTP $status -> $error", cause)
+private fun Response.contentType(): ContentType {
+    val clientContentTypesHeaders = header(HttpHeaders.ContentType)
+    return if (clientContentTypesHeaders.isEmpty()) ContentType.Text.Plain else ContentType.parse(clientContentTypesHeaders.first())
+}
+
+private fun Headers.toFuel(): Map<String, Any> {
+    val fuelHeaders = mutableMapOf<String, Any>()
+    forEach { key, values ->
+        fuelHeaders[key] = values
+    }
+    return fuelHeaders.toMap()
+}
+private fun Parameters.toFuel(): List<Pair<String, Any?>> {
+    val fuelParameters = mutableListOf<Pair<String, Any?>>()
+    forEach { key, value ->
+        fuelParameters.add(key to value)
+    }
+    return fuelParameters.toList()
+}
+private fun initializeRequest(
+    httpMethod: HttpMethod,
+    url: URI,
+    parameters: List<Pair<String, Any?>>
+) : Request {
+    return when (httpMethod.value.toLowerCase()) {
+        "get" -> url.toString().httpGet(parameters)
+        "post" -> url.toString().httpPost(parameters)
+        "put" -> url.toString().httpPut(parameters)
+        "delete" -> url.toString().httpDelete(parameters)
+        else -> throw IllegalStateException("Ikke supportert HttpMethod $httpMethod")
+    }
+}
+
+
+private suspend fun ApplicationCall.respondErrorAndLog(status: HttpStatusCode, error: String) {
+    logger.error("HTTP $status -> $error")
     respond(status, error)
 }
 
 private fun ApplicationRequest.hasValidPath(): Boolean {
     val path = getPathWithoutLeadingSlashes()
     return path.isNotBlank()
-}
-
-private fun ApplicationRequest.hasCorrelationIdSet(): Boolean {
-    return header(HttpHeaders.XCorrelationId) != null
 }
 
 private fun ApplicationRequest.getPathWithoutLeadingSlashes(): String {
@@ -173,11 +206,4 @@ private fun URLBuilder.trimmedPath(pathParts : List<String>): URLBuilder  {
 
 private fun ApplicationRequest.isMonitoringRequest() : Boolean {
     return monitoringPaths.contains(firstPathSegment())
-}
-
-private fun ensureUtf8(
-    byteArray: ByteArray
-) : TextContent {
-    val utf8String = String(byteArray, Charsets.UTF_8)
-    return TextContent(utf8String, contentType = JSON_UTF_8)
 }

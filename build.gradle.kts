@@ -1,37 +1,22 @@
-import org.gradle.internal.impldep.org.fusesource.jansi.AnsiRenderer.test
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-val logbackVersion = "1.2.3"
-val ktorVersion = "1.1.2"
-val logstashLogbackVersion = "5.3"
-
+val dusseldorfKtorVersion = "1.2.1.65ce328"
 val mainClass = "no.nav.helse.AppKt"
 
 plugins {
-    kotlin("jvm") version "1.3.21"
+    kotlin("jvm") version "1.3.31"
 }
 
 buildscript {
+    apply("https://raw.githubusercontent.com/navikt/dusseldorf-ktor/65ce328364975f63e111891794b954b892001c76/gradle/dusseldorf-ktor.gradle.kts")
     dependencies {
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.21")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.31")
     }
 }
 
 dependencies {
-    compile(kotlin("stdlib-jdk8"))
-
-    // Ktor Server
-    compile("io.ktor:ktor-server-netty:$ktorVersion")
-
-    // Logging
-    compile ( "ch.qos.logback:logback-classic:$logbackVersion")
-    compile ("net.logstash.logback:logstash-logback-encoder:$logstashLogbackVersion")
-
-    // Ktor Client
-    compile ("io.ktor:ktor-client-core:$ktorVersion")
-    compile ("io.ktor:ktor-client-core-jvm:$ktorVersion")
-    compile ("io.ktor:ktor-client-apache:$ktorVersion")
-
+    compile ( "no.nav.helse:dusseldorf-ktor-core:$dusseldorfKtorVersion")
+    compile ( "no.nav.helse:dusseldorf-ktor-client:$dusseldorfKtorVersion")
 }
 
 repositories {
@@ -77,5 +62,5 @@ tasks.named<Jar>("jar") {
 }
 
 tasks.withType<Wrapper> {
-    gradleVersion = "5.2.1"
+    gradleVersion = "5.4.1"
 }
