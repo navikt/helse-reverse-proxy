@@ -87,7 +87,7 @@ fun Application.helseReverseProxy() {
                         .timeoutRead(20_000)
 
                     if (body != null) {
-                        httpRequest.body(ByteArrayInputStream(body))
+                        httpRequest.body( {ByteArrayInputStream(body) })
                     }
 
                     val (_, response, result) = httpRequest.awaitByteArrayResponseResult()

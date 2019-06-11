@@ -1,7 +1,6 @@
 # helse-reverse-proxy
 
 For kommunikasjon fra SBS til FSS.
-Alle requester må ha header "X-Correlation-Id" satt.
 
 ## Unngår å..
 - ..måtte registrere & Deploye den "tilbydende" tjenesten i FSS i Fasit
