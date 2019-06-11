@@ -49,7 +49,6 @@ fun Application.helseReverseProxy() {
 
     install(CallLogging) {
         callIdMdc("correlation_id")
-        correlationIdAndRequestIdInMdc()
         mdc("request_id") {"generated-${UUID.randomUUID()}"}
         logRequests()
     }
