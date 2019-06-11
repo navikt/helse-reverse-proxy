@@ -43,12 +43,14 @@ fun Application.helseReverseProxy() {
 
     install(CallId) {
         retrieve { call ->
-            call.request.header(HttpHeaders.XCorrelationId) ?: call.request.header(navCallIdHeader) ?: "generated-${UUID.randomUUID()}"
+            call.request.header(HttpHeaders.XCorrelationId) ?: call.request.header(navCallIdHeader)
         }
     }
 
     install(CallLogging) {
         callIdMdc("correlation_id")
+        correlationIdAndRequestIdInMdc()
+        mdc("request_id") {"generated-${UUID.randomUUID()}"}
         logRequests()
     }
 
@@ -139,7 +141,7 @@ private fun Headers.toFuel(): Map<String, Any> {
 private fun Parameters.toFuel(): List<Pair<String, Any?>> {
     val fuelParameters = mutableListOf<Pair<String, Any?>>()
     forEach { key, value ->
-        fuelParameters.add(key to value)
+        value.forEach { fuelParameters.add(key to it) }
     }
     return fuelParameters.toList()
 }
