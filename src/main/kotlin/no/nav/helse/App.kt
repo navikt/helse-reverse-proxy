@@ -32,11 +32,7 @@ fun main(args: Array<String>): Unit  = io.ktor.server.netty.EngineMain.main(args
 fun Application.helseReverseProxy() {
     val mappings = Environment().getMappings()
     val client = HttpClient(Apache)
-    val excludeHeaders = mutableListOf<String>()
-
-    HttpHeaders.UnsafeHeaders.forEach { header ->
-        excludeHeaders.add(header.toLowerCase())
-    }
+    val excludeHeaders = HttpHeaders.UnsafeHeaders.map { header -> header.toLowerCase() }
 
     install(Routing) {
         monitoring()
