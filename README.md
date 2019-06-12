@@ -1,6 +1,7 @@
 # helse-reverse-proxy
 
 For kommunikasjon fra SBS til FSS.
+TODO: Bytte ut hele tjenesten med nginx reverse proxy..?
 
 ## Unngår å..
 - ..måtte registrere & Deploye den "tilbydende" tjenesten i FSS i Fasit
