@@ -43,7 +43,5 @@ spec:
       value: https://app-q1.adeo.no/aktoerregister
     - name: HRP_sparkel
       value: http://sparkel
-    - name: HRP_pleiepengesoknad_prosessering
-      value: http://pleiepengesoknad-mottak
     - name: HRP_pleiepengesoknad_mottak
       value: http://pleiepengesoknad-mottak
