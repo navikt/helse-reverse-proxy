@@ -45,3 +45,5 @@ spec:
       value: http://sparkel
     - name: HRP_pleiepengesoknad_prosessering
       value: http://pleiepengesoknad-mottak
+    - name: HRP_pleiepengesoknad_mottak
+      value: http://pleiepengesoknad-mottak
