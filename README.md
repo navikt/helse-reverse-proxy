@@ -16,4 +16,5 @@ TODO: Bytte ut hele tjenesten med nginx reverse proxy..?
 
 ## For NAV-interne
 For å få en API Key som gjør det mulig å kalle denne tjenesten se https://confluence.adeo.no/x/SQ6tEg
+Interne henvendelser kan sendes via Slack i kanalen #team-düsseldorf.
 
