@@ -37,12 +37,6 @@ spec:
   vault:
     enabled: false
   env:
-    - name: HRP_security_token_service
-      value: http://security-token-service
-    - name: HRP_aktoer_register
-      value: https://app.adeo.no/aktoerregister
-    - name: HRP_sparkel
-      value: http://sparkel
     - name: HRP_pleiepengesoknad_mottak
       value: http://pleiepengesoknad-mottak
     - name: HRP_k9_selvbetjening_oppslag
