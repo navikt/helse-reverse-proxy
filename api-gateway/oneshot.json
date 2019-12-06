@@ -1,0 +1,26 @@
+{
+	"eier": "Group_b8f45495-7387-4627-8c00-be5ecca1d85f",
+	"sone": "Frafss",
+	"tjenester": [
+        {
+			"navn": "helse-reverse-proxy",
+			"endepunkt": "https://helse-reverse-proxy.nais.preprod.local/",
+			"miljo": "q1"
+		},
+		{
+			"navn": "helse-reverse-proxy",
+			"endepunkt": "https://helse-reverse-proxy.nais.adeo.no/",
+			"miljo": "p"
+		}
+	],
+	"konsumenter": [
+        {
+			"navn": "omsorgspenger-api",
+			"tjeneste": "helse-reverse-proxy"
+		},
+		{
+			"navn": "pleiepengesoknad-api",
+			"tjeneste": "helse-reverse-proxy"
+		}
+	]
+}
