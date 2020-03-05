@@ -19,6 +19,10 @@
 			"tjeneste": "helse-reverse-proxy"
 		},
 		{
+			"navn": "omsorgspengerutbetaling-api",
+			"tjeneste": "helse-reverse-proxy"
+		},
+		{
 			"navn": "pleiepengesoknad-api",
 			"tjeneste": "helse-reverse-proxy"
 		}
