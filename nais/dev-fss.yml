@@ -43,5 +43,5 @@ spec:
       value: http://omsorgspenger-mottak
     - name: HRP_k9_selvbetjening_oppslag
       value: http://k9-selvbetjening-oppslag
-    - name: HRP_k9_omsorgspengerutbetaling_mottak
+    - name: HRP_omsorgspengerutbetaling_mottak
       value: http://omsorgspengerutbetaling-mottak
