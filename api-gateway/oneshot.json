@@ -25,6 +25,10 @@
 		{
 			"navn": "pleiepengesoknad-api",
 			"tjeneste": "helse-reverse-proxy"
+		},
+		{
+			"navn": "frisinn-api",
+			"tjeneste": "helse-reverse-proxy"
 		}
 	]
 }
