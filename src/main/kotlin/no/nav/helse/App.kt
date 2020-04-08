@@ -17,7 +17,9 @@ import io.ktor.response.header
 import io.ktor.response.respond
 import io.ktor.response.respondBytes
 import io.ktor.routing.Routing
-import no.nav.helse.dusseldorf.ktor.core.*
+import no.nav.helse.dusseldorf.ktor.core.DefaultProbeRoutes
+import no.nav.helse.dusseldorf.ktor.core.log
+import no.nav.helse.dusseldorf.ktor.core.logRequests
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
