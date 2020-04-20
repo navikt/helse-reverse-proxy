@@ -51,3 +51,5 @@ spec:
       value: http://omsorgsdageroverforingsoknad-mottak
     - name: HRP_k9_ettersending_mottak
       value: http://k9-ettersending-mottak
+    - name: HRP_frisinn_mottak
+      value: http://frisinn-mottak
