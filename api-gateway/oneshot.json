@@ -37,6 +37,10 @@
 		{
 			"navn": "k9-ettersending-api",
 			"tjeneste": "helse-reverse-proxy"
+		},
+		{
+			"navn": "omsorgspengerutbetalingsoknad-arbeidstaker-api",
+			"tjeneste": "helse-reverse-proxy"
 		}
 	]
 }
