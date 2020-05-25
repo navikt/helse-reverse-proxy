@@ -29,7 +29,7 @@ spec:
     - https://helse-reverse-proxy.nais.adeo.no
   replicas:
     min: 2
-    max: 2
+    max: 4
     cpuThresholdPercentage: 90
   prometheus:
     enabled: false
