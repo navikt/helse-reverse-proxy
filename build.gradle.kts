@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
-val dusseldorfKtorVersion = "1.3.2.fd9c1eb"
+val dusseldorfKtorVersion = "1.3.2.6840711"
 val mainClass = "no.nav.helse.AppKt"
 
 plugins {
@@ -11,7 +11,7 @@ plugins {
 }
 
 buildscript {
-    apply("https://raw.githubusercontent.com/navikt/dusseldorf-ktor/fd9c1eb344b39e5755493b8f478e804c2bae46de/gradle/dusseldorf-ktor.gradle.kts")
+    apply("https://raw.githubusercontent.com/navikt/dusseldorf-ktor/684071162815a8c33befcd0e2fab40a5b987ba2e/gradle/dusseldorf-ktor.gradle.kts")
 }
 
 dependencies {
@@ -61,5 +61,5 @@ tasks.withType<ShadowJar> {
 }
 
 tasks.withType<Wrapper> {
-    gradleVersion = "6.3"
+    gradleVersion = "6.4.1"
 }
