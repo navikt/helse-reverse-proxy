@@ -41,6 +41,10 @@
 		{
 			"navn": "omsorgspengerutbetalingsoknad-arbeidstaker-api",
 			"tjeneste": "helse-reverse-proxy"
+		},
+		{
+			"navn": "sif-innsyn-api",
+			"tjeneste": "helse-reverse-proxy"
 		}
 	]
 }

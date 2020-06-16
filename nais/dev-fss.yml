@@ -55,3 +55,5 @@ spec:
       value: http://k9-ettersending-mottak
     - name: HRP_frisinn_mottak
       value: http://frisinn-mottak
+    - name: HRP_sif_innsyn_api
+      value: http://sif-innsyn-api
