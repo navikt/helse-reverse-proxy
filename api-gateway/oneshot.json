@@ -45,6 +45,10 @@
 		{
 			"navn": "sif-innsyn-api",
 			"tjeneste": "helse-reverse-proxy"
+		},
+		{
+			"navn": "omsorgspenger-midlertidig-alene-api",
+			"tjeneste": "helse-reverse-proxy"
 		}
 	]
 }
