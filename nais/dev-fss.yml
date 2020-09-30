@@ -57,3 +57,5 @@ spec:
       value: http://frisinn-mottak
     - name: HRP_sif_innsyn_api
       value: http://sif-innsyn-api
+    - name: HRP_omsorgspenger_midlertidig_alene_api
+      value: http://omsorgspenger-midlertidig-alene-api
