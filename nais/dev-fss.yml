@@ -59,3 +59,7 @@ spec:
       value: http://sif-innsyn-api
     - name: HRP_omsorgspenger_midlertidig_alene_api
       value: http://omsorgspenger-midlertidig-alene-api
+    - name: HRP_k9_joark
+      value: http://k9-joark
+    - name: HRP_k9_dokument
+      value: http://k9-dokument
