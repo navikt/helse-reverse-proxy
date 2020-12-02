@@ -57,6 +57,10 @@
 		{
 			"navn": "omsorgsdager-melding-api",
 			"tjeneste": "helse-reverse-proxy"
+		},
+		{
+			"navn": "omsorgsdager-melding-prosessering",
+			"tjeneste": "helse-reverse-proxy"
 		}
 	]
 }
