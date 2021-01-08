@@ -31,10 +31,6 @@
 			"tjeneste": "helse-reverse-proxy"
 		},
 		{
-			"navn": "omsorgsdageroverforingsoknad-api",
-			"tjeneste": "helse-reverse-proxy"
-		},
-		{
 			"navn": "k9-ettersending-api",
 			"tjeneste": "helse-reverse-proxy"
 		},
