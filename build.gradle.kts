@@ -6,7 +6,7 @@ val mainClass = "no.nav.helse.AppKt"
 
 plugins {
     kotlin("jvm") version "1.4.31"
-    id("com.github.johnrengelman.shadow") version "5.2.0"
+    id("com.github.johnrengelman.shadow") version "6.1.0"
 
 }
 
@@ -61,5 +61,5 @@ tasks.withType<ShadowJar> {
 }
 
 tasks.withType<Wrapper> {
-    gradleVersion = "6.4.1"
+    gradleVersion = "6.7.1"
 }
