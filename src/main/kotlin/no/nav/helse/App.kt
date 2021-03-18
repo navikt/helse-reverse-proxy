@@ -40,7 +40,7 @@ fun Application.helseReverseProxy() {
     }
 
     intercept(ApplicationCallPipeline.Monitoring) {
-        call.request.log()
+        call.request.log(templateQueryParameters = true)
     }
 
     install(CallId) {
@@ -52,7 +52,7 @@ fun Application.helseReverseProxy() {
     install(CallLogging) {
         callIdMdc("correlation_id")
         mdc("request_id") {"generated-${UUID.randomUUID()}"}
-        logRequests()
+        logRequests(templateQueryParameters = true)
     }
 
     intercept(ApplicationCallPipeline.Call) {
