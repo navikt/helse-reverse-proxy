@@ -14,56 +14,12 @@
 		}
 	],
 	"konsumenter": [
-        {
-			"navn": "omsorgspenger-api",
-			"tjeneste": "helse-reverse-proxy"
-		},
-		{
-			"navn": "omsorgspengerutbetaling-api",
-			"tjeneste": "helse-reverse-proxy"
-		},
 		{
 			"navn": "pleiepengesoknad-api",
 			"tjeneste": "helse-reverse-proxy"
 		},
 		{
 			"navn": "frisinn-api",
-			"tjeneste": "helse-reverse-proxy"
-		},
-		{
-			"navn": "k9-ettersending-api",
-			"tjeneste": "helse-reverse-proxy"
-		},
-		{
-			"navn": "omsorgspengerutbetalingsoknad-arbeidstaker-api",
-			"tjeneste": "helse-reverse-proxy"
-		},
-		{
-			"navn": "sif-innsyn-api",
-			"tjeneste": "helse-reverse-proxy"
-		},
-		{
-			"navn": "omsorgspenger-midlertidig-alene-api",
-			"tjeneste": "helse-reverse-proxy"
-		},
-		{
-			"navn": "omsorgspenger-midlertidig-alene-prosessering",
-			"tjeneste": "helse-reverse-proxy"
-		},
-		{
-			"navn": "omsorgsdager-melding-api",
-			"tjeneste": "helse-reverse-proxy"
-		},
-		{
-			"navn": "omsorgsdager-melding-prosessering",
-			"tjeneste": "helse-reverse-proxy"
-		},
-		{
-			"navn": "omsorgsdager-aleneomsorg-api",
-			"tjeneste": "helse-reverse-proxy"
-		},
-		{
-			"navn": "omsorgsdager-aleneomsorg-prosessering",
 			"tjeneste": "helse-reverse-proxy"
 		}
 	]
