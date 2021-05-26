@@ -39,23 +39,9 @@ spec:
   env:
     - name: HRP_pleiepengesoknad_mottak
       value: http://pleiepengesoknad-mottak
-    - name: HRP_omsorgspenger_mottak
-      value: http://omsorgspenger-mottak
-    - name: HRP_omsorgspengerutbetalingsoknad_mottak
-      value: http://omsorgspengerutbetalingsoknad-mottak
     - name: HRP_k9_selvbetjening_oppslag
       value: http://k9-selvbetjening-oppslag
-    - name: HRP_omsorgspengerutbetaling_mottak
-      value: http://omsorgspengerutbetaling-mottak
-    - name: HRP_omsorgspengerutbetalingsoknad_arbeidstaker_mottak
-      value: http://omsorgspengerutbetalingsoknad-arbeidstaker-mottak
-    - name: HRP_omsorgsdageroverforingsoknad_mottak
-      value: http://omsorgsdageroverforingsoknad-mottak
-    - name: HRP_k9_ettersending_mottak
-      value: http://k9-ettersending-mottak
     - name: HRP_frisinn_mottak
       value: http://frisinn-mottak
-    - name: HRP_k9_joark
-      value: http://k9-joark
     - name: HRP_k9_dokument
       value: http://k9-dokument.dusseldorf
