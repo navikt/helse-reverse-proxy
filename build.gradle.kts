@@ -5,7 +5,7 @@ val dusseldorfKtorVersion = "1.5.2.fa18872"
 val mainClass = "no.nav.helse.AppKt"
 
 plugins {
-    kotlin("jvm") version "1.4.31"
+    kotlin("jvm") version "1.5.20"
     id("com.github.johnrengelman.shadow") version "6.1.0"
 
 }
