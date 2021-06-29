@@ -41,3 +41,5 @@ spec:
       value: http://k9-selvbetjening-oppslag
     - name: HRP_frisinn_mottak
       value: http://frisinn-mottak
+    - name: HRP_k9_selvbetjening_oppslag_dusseldorf
+      value: http://k9-selvbetjening-oppslag.dusseldorf
