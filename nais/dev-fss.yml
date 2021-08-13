@@ -38,7 +38,7 @@ spec:
     enabled: false
   env:
     - name: HRP_frisinn_mottak
-      value: http://frisinn-mottak
+      value: http://frisinn-mottak.dusseldorf
     - name: HRP_k9_dokument
       value: http://k9-dokument.dusseldorf
     - name: HRP_k9_selvbetjening_oppslag
