@@ -2,7 +2,7 @@ apiVersion: "nais.io/v1alpha1"
 kind: "Application"
 metadata:
   name: helse-reverse-proxy
-  namespace: default
+  namespace: dusseldorf
   labels:
     team: dusseldorf
 spec:
@@ -38,6 +38,6 @@ spec:
     enabled: false
   env:
     - name: HRP_frisinn_mottak
-      value: http://frisinn-mottak.dusseldorf
+      value: http://frisinn-mottak
     - name: HRP_k9_selvbetjening_oppslag
-      value: http://k9-selvbetjening-oppslag.dusseldorf
+      value: http://k9-selvbetjening-oppslag
