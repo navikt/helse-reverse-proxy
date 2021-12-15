@@ -8,7 +8,7 @@ val mainClass = "no.nav.helse.AppKt"
 
 plugins {
     kotlin("jvm") version "1.5.21"
-    id("com.github.johnrengelman.shadow") version "7.0.0"
+    id("com.github.johnrengelman.shadow") version "7.1.1"
 
 }
 
