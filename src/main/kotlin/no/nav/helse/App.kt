@@ -151,7 +151,7 @@ private fun initializeRequest(
     url: URI,
     parameters: List<Pair<String, Any?>>
 ) : Request {
-    return when (httpMethod.value.toLowerCase()) {
+    return when (httpMethod.value.lowercase()) {
         "get" -> url.toString().httpGet(parameters)
         "post" -> url.toString().httpPost(parameters)
         "put" -> url.toString().httpPut(parameters)
@@ -176,7 +176,7 @@ private fun ApplicationRequest.getPathWithoutLeadingSlashes(): String {
     while (path.startsWith("/")) {
         path = path.substring(1)
     }
-    return path.toLowerCase()
+    return path.lowercase()
 }
 
 private fun ApplicationRequest.firstPathSegment(): String {
