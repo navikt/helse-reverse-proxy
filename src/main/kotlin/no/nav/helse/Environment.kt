@@ -18,7 +18,7 @@ data class Environment(val environmentVariables: Map<String, String> = System.ge
 
         environmentVariables.forEach { (key, value) ->
             if (key.startsWith(ENVIRONMENT_VARIABLE_PREFIX, ignoreCase = true)) {
-                val contextPath = key.substring(PREFIX_LENGTH).toLowerCase().replace("_","-")
+                val contextPath = key.substring(PREFIX_LENGTH).lowercase().replace("_","-")
                 val url = URI(value)
                 parsedMappings[contextPath] = url
                 logger.info("Added mapping '$contextPath' -> '$url'")
