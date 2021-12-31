@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
-val dusseldorfKtorVersion = "3.1.6.7-7d29e37"
+val dusseldorfKtorVersion = "3.1.6.7-8665877"
 val fuelVersion = "2.3.1"
 
 val mainClass = "no.nav.helse.AppKt"
